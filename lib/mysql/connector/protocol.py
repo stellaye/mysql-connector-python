@@ -390,6 +390,9 @@ class MySQLProtocol(object):
         elif field[1] == FieldType.LONGLONG:
             format_ = '<q'
             length = 8
+        elif field[1] == FieldType.YRAR:
+            format_ = '<H'
+            length = 2
 
         if field[7] & FieldFlag.UNSIGNED:
             format_ = format_.upper()
@@ -462,7 +465,7 @@ class MySQLProtocol(object):
                 continue
             elif field[1] in (FieldType.TINY, FieldType.SHORT,
                               FieldType.INT24,
-                              FieldType.LONG, FieldType.LONGLONG):
+                              FieldType.LONG, FieldType.LONGLONG,FieldType.YEAR):
                 (packet, value) = self._parse_binary_integer(packet, field)
                 values.append(value)
             elif field[1] in (FieldType.DOUBLE, FieldType.FLOAT):
@@ -477,7 +480,10 @@ class MySQLProtocol(object):
                 values.append(value)
             else:
                 (packet, value) = utils.read_lc_string(packet)
-                values.append(value.decode(charset))
+                if filed[1] in (FieldType.DECIMAL,FieldType.NEWDECIMAL):
+                    values.append(Decimal(value.decode(charset)))
+                else:
+                    values.append(value.decode(charset))
 
         return tuple(values)
 
